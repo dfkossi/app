@@ -1,0 +1,63 @@
+#!/bin/bash
+
+# git clone https://github.com/dfkossi/genericBlockchainApp /cryptogen/genericBlockchainApp; /cryptogen/genericBlockchainApp/setup
+
+echo "Initial setup: Generate Crypto Material"
+cd /cryptogen/genericBlockchainApp
+cp /cryptogen/genericBlockchainApp/configtx.yaml /cryptogen/
+rm -rf /cryptogen/crypto-config
+cryptogen generate --output=/cryptogen/crypto-config
+
+echo "Copy chaincode example"
+mkdir -p $GOPATH/src/github.com/hyperledger/fabric/examples/chaincode/go/
+cp -R chaincode $GOPATH/src/github.com/hyperledger/fabric/examples/chaincode/go/
+
+echo "Initial setup: Genesis & Channel Block"
+export FABRIC_CFG_PATH=/cryptogen/
+mkdir /cryptogen/var/orderer.example.com/genesis/ -p
+configtxgen -channelID default -profile Genesis -outputBlock /cryptogen/var/orderer.example.com/genesis/orderer.genesis.block
+configtxgen -channelID myc -profile Public -channelID myc -outputCreateChannelTx /cryptogen/channel.tx
+
+sleep 45
+
+echo "Setup peer0.org1.com on channel myc"
+cd /cryptogen/
+
+export FABRIC_CFG_PATH=/etc/hyperledger/fabric
+export CORE_PEER_LOCALMSPID=Org1
+export CORE_PEER_TLS_ROOTCERT_FILE=/cryptogen/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt
+export CORE_PEER_ADDRESS=peer0-org1:7051
+export CORE_PEER_MSPCONFIGPATH=/cryptogen/crypto-config/peerOrganizations/org1.example.com/users/Admin\@org1.example.com/msp/
+
+echo "Channel Creation"
+peer channel create -o orderer0:7050 -c myc -f channel.tx
+sleep 3
+
+echo "Channel Join"
+peer channel join -b myc.block
+sleep 3
+
+echo "Chaincode Install"
+peer chaincode install -n mycc -p github.com/hyperledger/fabric/examples/chaincode/go/chaincode -v v0
+sleep 3
+
+echo "Setup peer0.org2.com on channel myc"
+
+export FABRIC_CFG_PATH=/etc/hyperledger/fabric
+export CORE_PEER_LOCALMSPID=Org2
+export CORE_PEER_TLS_ROOTCERT_FILE=/cryptogen/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt
+export CORE_PEER_ADDRESS=peer0-org2:7051
+export CORE_PEER_MSPCONFIGPATH=/cryptogen/crypto-config/peerOrganizations/org2.example.com/users/Admin\@org2.example.com/msp/
+
+echo "Channel Join"
+peer channel join -b myc.block
+sleep 3
+
+echo "Chaincode Install"
+peer chaincode install -n mycc -p github.com/hyperledger/fabric/examples/chaincode/go/chaincode -v v0
+sleep 3
+
+echo "Chaincode Instantiate"
+peer chaincode instantiate -o orderer0:7050 -C myc -n mycc -v v0 -c '{"Args":["init"]}'
+
+echo "DONE"

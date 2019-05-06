@@ -1,0 +1,15 @@
+export CORE_PEER_LOCALMSPID=ORG1
+export CORE_PEER_MSPCONFIGPATH=/cryptogen/crypto-config/peerOrganizations/org1.com/users/Admin\@org1.com/msp/
+
+export CORE_PEER_TLS_CERT_FILE="/cryptogen/crypto-config/peerOrganizations/org1.com/users/Admin\@org1.com/tls/server.crt" 
+export CORE_PEER_TLS_KEY_FILE="/cryptogen/crypto-config/peerOrganizations/org1.com/users/Admin\@org1.com/tls/server.key"
+export CORE_PEER_TLS_ROOTCERT_FILE="/cryptogen/crypto-config/peerOrganizations/org1.com/users/Admin\@org1.com/tls/ca.crt"
+
+
+echo <<EOF
+go get github.com/hyperledger/fabric
+CORE_PEER_ADDRESS=peer0-org1:7051 peer chaincode install -n mycc -p github.com/hyperledger/fabric/examples/chaincode/go/chaincode_example02 -v v0
+
+CORE_PEER_ADDRESS=peer0-org1:7051 peer chaincode instantiate -o orderer0:7050 -C myc -n mycc  -v v0 -c '{"Args":["init","a","100","b","200"]}' -v v0
+
+EOF
