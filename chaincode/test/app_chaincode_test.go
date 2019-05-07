@@ -16,9 +16,10 @@ limitations under the License.
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
-	"encoding/json"
+
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 )
 
@@ -29,7 +30,6 @@ func checkInit(t *testing.T, stub *shim.MockStub, args [][]byte) {
 		fmt.Println("Init failed", string(res.Message))
 		t.FailNow()
 	}
-	
 
 }
 
@@ -60,9 +60,8 @@ func checkQuery(t *testing.T, stub *shim.MockStub, name string, value string) {
 	}
 }
 
-
-func checkChangeAccess(t *testing.T, stub *shim.MockStub, PortfolioID string, InvId string, Status string) {
-	res := stub.MockInvoke("1", [][]byte{[]byte("ChangeStatus"), []byte(PortfolioID),[]byte(InvId),[]byte(Status)})
+/* func checkChangeAccess(t *testing.T, stub *shim.MockStub, PortfolioID string, InvId string, Status string) {
+	res := stub.MockInvoke("1", [][]byte{[]byte("ChangeStatus"), []byte(PortfolioID), []byte(InvId), []byte(Status)})
 	if res.Status != shim.OK {
 		fmt.Println("ChangeStatus", PortfolioID, "failed", string(res.Message))
 		t.FailNow()
@@ -72,17 +71,17 @@ func checkChangeAccess(t *testing.T, stub *shim.MockStub, PortfolioID string, In
 		t.FailNow()
 	}
 
-}
+} */
 
-func checkInitiateDemand(t *testing.T, stub *shim.MockStub, InvesterID string, ManagerID string, PortfolioID string ) {
+func checkInitiateDemand(t *testing.T, stub *shim.MockStub, uuid string, name string) {
 
-	res := stub.MockInvoke("1", [][]byte{[]byte("InitiateDemand"), []byte(InvesterID),[]byte(ManagerID),[]byte(PortfolioID)})
+	res := stub.MockInvoke("1", [][]byte{[]byte("InitiateDemand"), []byte(uuid), []byte(name)})
 	if res.Status != shim.OK {
-		fmt.Println("Demand not initiated from ", InvesterID, "to access", PortfolioID)
+		fmt.Println("Demand not initiated from ", uuid, "for", name)
 		t.FailNow()
 	}
 	if res.Payload == nil {
-		fmt.Println("ChangeStatus", PortfolioID, "failed to get value")
+		fmt.Println("ChangeStatus", name, "failed to get value")
 		t.FailNow()
 	}
 }
@@ -93,26 +92,23 @@ func TestExample(t *testing.T) {
 
 	checkInit(t, stub, [][]byte{[]byte("init")})
 
-	checkInitiateDemand(t, stub, "7","8","FR0013281003")
+	checkInitiateDemand(t, stub, "7", "DAD")
 
-	checkInitiateDemand(t, stub, "10","8","FR0013281009")
+	checkInitiateDemand(t, stub, "10", "8")
 
+	checkQuery(t, stub, "DAD", "7")
 
-	checkQuery(t, stub, "FR0013281003","7")
+	/* checkChangeAccess(t, stub, "FR0013281003", "7", "ACCEPT")
 
-	checkChangeAccess(t, stub, "FR0013281003","7", "ACCEPT")
+	checkQuery(t, stub, "FR0013281003", "7")
 
-	checkQuery(t, stub, "FR0013281003","7")
+	checkQuery(t, stub, "FR0013281009", "10")
 
-	checkQuery(t, stub, "FR0013281009","10")
+	checkChangeAccess(t, stub, "FR0013281009", "10", "REFUSE")
 
-	checkChangeAccess(t, stub, "FR0013281009","10", "REFUSE")
-
-	checkQuery(t, stub, "FR0013281009","10")
+	checkQuery(t, stub, "FR0013281009", "10") */
 
 }
-
-
 
 /*
 func checkState(t *testing.T, stub *shim.MockStub, name string, value string) {
