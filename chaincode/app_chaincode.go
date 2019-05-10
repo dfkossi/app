@@ -12,10 +12,140 @@ type DemandeChaincode struct {
 }
 
 type Organization struct {
-	uuid               string
-	name               string
-	prettyname         string
-	typeOfOrganization string
+	Uuid               string
+	Name               string
+	PrettyName         string
+	TypeOfOrganization string
+	//Admin              Administrators
+	AdminList  []Administrators
+	DeviceList []Device
+}
+
+type Administrators struct {
+	EmployeeID       string
+	OrganizationName Organization
+}
+
+type PatchFile struct {
+	Uuid       string
+	Name       string
+	PrettyName string
+	fileURL    string
+	fileHash   string
+	version    string
+}
+
+type Patch struct {
+	Uuid             string
+	Name             string
+	PrettyName       string
+	ReleaseDate      string
+	Status           string
+	ReleaseURL       string
+	Version          int
+	Patches          []PatchFile
+	OrganizationName Organization
+}
+
+type ConfigurationFile struct {
+	ReleaseDate string
+	Status      string
+	FileURL     string
+	FileHash    string
+	Version     string
+}
+
+type Configuration struct {
+	ReleaseDate        string
+	Status             string
+	ConfigurationFiles []ConfigurationFile
+}
+
+type DeviceClass struct {
+	Uuid       string
+	Name       string
+	PrettyName string
+	PatchList  []Patch
+}
+
+type Device struct {
+	Uuid       string
+	Name       string
+	PrettyName string
+
+	DeviceClassID        string
+	Cpe                  string
+	CurrentPatch         Patch
+	EUCitizenID          string
+	Provider             Organization
+	CurrentConfiguration Configuration
+	ConfigurationHistory []Configuration
+}
+
+type DeviceRights struct {
+	DeviceID         Device
+	OrganizationID   Organization
+	Right            string
+	DataSharingLevel string
+}
+
+type DeviceLog struct {
+	Uuid       string
+	Name       string
+	PrettyName string
+
+	DeviceID     string
+	Format       string
+	DateStart    string
+	DateEnd      string
+	DateOfficial string
+	StorageURL   string
+	Hash         string
+}
+
+type Evidence struct {
+	Uuid       string
+	Name       string
+	PrettyName string
+
+	EvidenceDate          string
+	EvidenceURL           string
+	TargetedVulnerability string
+	//TypeOfAttack
+}
+
+type EvidenceFile struct {
+	Uuid                     string
+	Name                     string
+	PrettyName               string
+	AttackStatus             string
+	EvidenceFileCreationDate string
+	//EvidenceFileInformation
+	EvidenceFileDataSourceTitle string
+}
+
+type OSEvidenceFile struct {
+	EvidenceFile
+	OSName    string
+	OSVersion string
+}
+
+type SoftwareEvidenceFile struct {
+	EvidenceFile
+	SoftwareName    string
+	SoftwareVersion string
+	SoftwareType    string
+}
+
+type NetworkDiagnosticEvidenceFile struct {
+	EvidenceFile
+	DiagnosticApplicationName    string
+	DiagnosticApplicationVersion string
+	DiagnosticApplicationResult  string
+}
+
+type IncidentTrackingEvidenceFile struct {
+	EvidenceFile
 }
 
 func (t *DemandeChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response {
@@ -30,10 +160,13 @@ func (t *DemandeChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response 
 	if fc == "InitiateDemand" {
 		return t.InitiateDemand(stub, args)
 	}
-	if fc == "getOrganizationByID" {
+	if fc == "query" {
+		return t.query(stub, args)
+	}
+	/* if fc == "getOrganizationByID" {
 		return t.getOrganizationByID(stub, args)
 	}
-	/* if fc == "ChangeFundAccessStatus" {
+	if fc == "ChangeFundAccessStatus" {
 		return t.ChangeFundAccessStatus(stub, args)
 	}
 	if fc == "CreateInventory" {
@@ -44,24 +177,44 @@ func (t *DemandeChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response 
 }
 
 func (t *DemandeChaincode) InitiateDemand(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-	/*
-		uuid := "uuid:" + args[0]
-		name := "name:" + args[1]
-		prettyname := "pretty:" + args[2]
-		typeOfOrganization := "type:" + args[3] */
 
-	fmt.Println("Initiate Demand")
+	Uuid := args[0]
+	Name := args[1]
+	PrettyName := args[2]
+	//TypeOfOrganization := args[3]
 
-	organization := Organization{uuid: "org1", name: "", prettyname: "", typeOfOrganization: ""}
+	//uuidAsJSONBytes, _ := json.Marshal
+	fmt.Println("Initiate Demand 1")
+
+	organization := Organization{Uuid: Uuid, Name: Name, PrettyName: PrettyName, TypeOfOrganization: "XXX"}
 	organizationAsJSONBytes, _ := json.Marshal(organization)
-	_ = t.PutOnLedger(stub, organization.uuid, organizationAsJSONBytes)
+	_ = t.PutOnLedger(stub, organization.Uuid, organizationAsJSONBytes)
 
-	jsonResp := "{\"OrganisationUUID\":\"" + organization.uuid + "\",\"Name\":\"" + organization.name + "\",\"PrettyName\":\"" + organization.prettyname + "\",\"Type\":\"" + organization.typeOfOrganization + "\"}"
+	jsonResp := "{\"OrganisationUUID\":\"" + organization.Uuid + "\",\"Name\":\"" + organization.Name + "\",\"PrettyName\":\"" + organization.PrettyName + "\",\"Type\":\"" + organization.TypeOfOrganization + "\"}"
 
 	fmt.Printf("Demand:%s\n", jsonResp)
 
 	return shim.Success([]byte("Assets created successfully."))
 
+}
+
+func (t *DemandeChaincode) query(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+
+	uuid := args[0]
+	//InvestisseurID := args[1]
+	fmt.Println("uuid:", uuid)
+	fmt.Println("Query that")
+	organizationAsJSONBytes := t.GetFromLedger(stub, uuid)
+	fmt.Println(organizationAsJSONBytes)
+	organization := Organization{}
+	_ = json.Unmarshal(organizationAsJSONBytes.Payload, &organization)
+
+	jsonResp := "{\"Name\":\"" + organization.Name + "\",\"OrganisationUUID\":\"" + organization.Uuid + "\",\"PrettyName\":\"" + organization.PrettyName + "\",\"Type\":\"" + organization.TypeOfOrganization + "\"}"
+
+	fmt.Printf("Query Response:%s\n", jsonResp)
+	resultAsBytes, _ := json.Marshal(organization.Name)
+
+	return shim.Success(resultAsBytes)
 }
 
 /* func (t *DemandeChaincode) ChangeFundAccessStatus(stub shim.ChaincodeStubInterface, args []string) pb.Response {
@@ -86,23 +239,22 @@ func (t *DemandeChaincode) InitiateDemand(stub shim.ChaincodeStubInterface, args
 	return shim.Success([]byte("Asset modified."))
 } */
 
-func (t *DemandeChaincode) getOrganizationByID(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+/* func (t *DemandeChaincode) getOrganizationByID(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 
-	uuid := "Org:" + args[0]
+	uuid := args[0]
 
 	fmt.Println("Query")
 	organizationAsJSONBytes := t.GetFromLedger(stub, uuid)
 	organization := Organization{}
 	_ = json.Unmarshal(organizationAsJSONBytes.Payload, &organization)
 
-	jsonResp := "{\"OrganisationUUID\":\"" + organization.uuid + "\",\"Name\":\"" + organization.name + "\",\"PrettyName\":\"" + organization.prettyname +
-		"\",\"Type\":\"" + organization.typeOfOrganization + "\"}"
+	jsonResp := "{\"OrganisationUUID\":\"" + organization.uuid + "\",\"Name\":\"" + organization.name + "\",\"PrettyName\":\"" + organization.prettyName + "\",\"Type\":\"" + organization.typeOfOrganization + "\"}"
 
-	fmt.Printf("Query Response:%:\n", jsonResp)
+	fmt.Printf("Query Response:%s\n", jsonResp)
 	resultAsBytes, _ := json.Marshal(organization)
 
 	return shim.Success(resultAsBytes)
-}
+} */
 
 /* func (t *DemandeChaincode) getFundAccessByID(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 
