@@ -216,27 +216,38 @@ func (t *DemandeChaincode) query(stub shim.ChaincodeStubInterface, args []string
 
 	return shim.Success(resultAsBytes)
 }
+func (t *DemandeChaincode) getOrganizationByID(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 
-/* func (t *DemandeChaincode) ChangeFundAccessStatus(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	uuid := args[0]
+
+	fmt.Println("Query")
+	organizationAsJSONBytes := t.GetFromLedger(stub, uuid)
+	organization := Organization{}
+	_ = json.Unmarshal(organizationAsJSONBytes.Payload, &organization)
+
+	jsonResp := "{\"Name\":\"" + organization.Name + "\",\"OrganisationUUID\":\"" + organization.Uuid + "\",\"PrettyName\":\"" + organization.PrettyName + "\",\"Type\":\"" + organization.TypeOfOrganization + "\"}"
+	fmt.Printf("Query Response:%s\n", jsonResp)
+	resultAsBytes, _ := json.Marshal(organization)
+
+	return shim.Success(resultAsBytes)
+}
+
+/* func (t *DemandeChaincode) getFundAccessByID(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 
 	fundAccessID := "fa:" + args[0]
-	Decision := args[1]
 
-	fmt.Println("Change Demand Status")
+	fmt.Println("Query")
 
 	fundAsJSONBytes := t.GetFromLedger(stub, fundAccessID)
 	fundaccess := FundAccess{}
-
 	_ = json.Unmarshal(fundAsJSONBytes.Payload, &fundaccess)
-	fundaccess.Status = Decision
 
 	jsonResp := "{\"FundID\":\"" + fundAccessID + "\",\"DemandStatus\":\"" + fundaccess.Status + "\",\"Investisseur\":\"" + fundaccess.Investisseur.UserID + "\"}"
+
 	fmt.Printf("Query Response:%s\n", jsonResp)
+	resultAsBytes, _ := json.Marshal(fundaccess)
 
-	NewfundAsJSONBytes, _ := json.Marshal(fundaccess)
-	_ = t.PutOnLedger(stub, fundaccess.fundAccessID, NewfundAsJSONBytes)
-
-	return shim.Success([]byte("Asset modified."))
+	return shim.Success(resultAsBytes)
 } */
 
 /* func (t *DemandeChaincode) getOrganizationByID(stub shim.ChaincodeStubInterface, args []string) pb.Response {
@@ -272,15 +283,6 @@ func (t *DemandeChaincode) query(stub shim.ChaincodeStubInterface, args []string
 	resultAsBytes, _ := json.Marshal(fundaccess)
 
 	return shim.Success(resultAsBytes)
-} */
-
-/* func (t *DemandeChaincode) CreateInventory(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-	inventoryFileID := "if:" + args[0]
-	inventoryFile := InventoryFile{inventoryFileID: inventoryFileID}
-	inventoryAsJSONBytes, _ := json.Marshal(inventoryFile)
-	_ = t.PutOnLedger(stub, inventoryFile.inventoryFileID, inventoryAsJSONBytes)
-
-	return shim.Success([]byte("Assets created successfully."))
 } */
 
 func (t *DemandeChaincode) PutOnLedger(stub shim.ChaincodeStubInterface, key string, value []byte) pb.Response {
