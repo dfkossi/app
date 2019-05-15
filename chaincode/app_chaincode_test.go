@@ -60,19 +60,6 @@ func checkQuery(t *testing.T, stub *shim.MockStub, name string, value string) {
 	}
 }
 
-/* func checkChangeAccess(t *testing.T, stub *shim.MockStub, PortfolioID string, InvId string, Status string) {
-	res := stub.MockInvoke("1", [][]byte{[]byte("ChangeStatus"), []byte(PortfolioID), []byte(InvId), []byte(Status)})
-	if res.Status != shim.OK {
-		fmt.Println("ChangeStatus", PortfolioID, "failed", string(res.Message))
-		t.FailNow()
-	}
-	if res.Payload == nil {
-		fmt.Println("ChangeStatus", PortfolioID, "failed to get value")
-		t.FailNow()
-	}
-
-} */
-
 func checkInitiateDemand(t *testing.T, stub *shim.MockStub, uuid string, name string, prettyName string) {
 
 	res := stub.MockInvoke("1", [][]byte{[]byte("InitiateDemand"), []byte(uuid), []byte(name), []byte(prettyName)})

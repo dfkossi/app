@@ -163,10 +163,10 @@ func (t *DemandeChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response 
 	if fc == "query" {
 		return t.query(stub, args)
 	}
-	/* if fc == "getOrganizationByID" {
+	if fc == "getOrganizationByID" {
 		return t.getOrganizationByID(stub, args)
 	}
-	if fc == "ChangeFundAccessStatus" {
+	/*if fc == "ChangeFundAccessStatus" {
 		return t.ChangeFundAccessStatus(stub, args)
 	}
 	if fc == "CreateInventory" {

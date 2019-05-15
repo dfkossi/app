@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# git clone https://github.com/dfkossi/genericBlockchainApp /cryptogen/genericBlockchainApp; /cryptogen/genericBlockchainApp/setup
+# git clone https://github.com/dfkossi/app /cryptogen/app; /cryptogen/app/setup
 
 echo "Initial setup: Generate Crypto Material"
-cd /cryptogen/genericBlockchainApp
-cp /cryptogen/genericBlockchainApp/configtx.yaml /cryptogen/
+cd /cryptogen/app
+cp /cryptogen/app/configtx.yaml /cryptogen/
 rm -rf /cryptogen/crypto-config
 cryptogen generate --output=/cryptogen/crypto-config
 
